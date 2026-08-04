@@ -8,8 +8,8 @@ resource "azurerm_windows_virtual_machine" "example" {
   admin_password        = random_password.password.result
   network_interface_ids = [azurerm_network_interface.network_interface.id]
   license_type          = var.license_type
-  secure_boot_enabled = var.secure_boot_enabled
-  source_image_id                 = var.image_id
+  secure_boot_enabled   = var.secure_boot_enabled
+  vtpm_enabled          = var.secure_boot_enabled
 
 
   identity {
@@ -22,12 +22,12 @@ resource "azurerm_windows_virtual_machine" "example" {
     disk_size_gb         = var.disk_size_gb
   }
 
-  # source_image_reference {
-  #   publisher = var.publisher
-  #   offer     = var.offer
-  #   sku       = var.sku
-  #   version   = var.storage_image_version
-  # }
+  source_image_reference {
+    publisher = var.publisher
+    offer     = var.offer
+    sku       = var.sku
+    version   = var.storage_image_version
+  }
   lifecycle {
     ignore_changes = [
       tags,
@@ -38,6 +38,11 @@ resource "azurerm_windows_virtual_machine" "example" {
   ]
 }
 
+resource "azurerm_disk_access" "azurerm_disk_access" {
+  name                = "${var.name}-diskacc"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+}
 
 # Creates Network Interface Card with private IP for Virtual Machine
 resource "azurerm_network_interface" "network_interface" {
@@ -78,7 +83,7 @@ resource "azurerm_network_security_rule" "nsg_rules" {
   direction                   = each.value.direction
   access                      = each.value.access
   protocol                    = each.value.protocol
-  source_address_prefixes       = each.value.source_address_prefixes
+  source_address_prefixes     = each.value.source_address_prefixes
   source_port_range           = each.value.source_port_range
   destination_address_prefix  = each.value.destination_address_prefix
   destination_port_range      = each.value.destination_port_range
@@ -94,6 +99,27 @@ resource "azurerm_network_interface_security_group_association" "security_group_
 }
 
 
+# Getting existing recovery_services_vault to add vm as a backup item 
+data "azurerm_recovery_services_vault" "services_vault" {
+  name                = var.recovery_services_vault_name
+  resource_group_name = var.services_vault_resource_group_name
+}
+# Getting existing Backup Policy for Virtual Machine
+data "azurerm_backup_policy_vm" "policy" {
+  name                = "VM-backup-policy"
+  recovery_vault_name = data.azurerm_recovery_services_vault.services_vault.name
+  resource_group_name = data.azurerm_recovery_services_vault.services_vault.resource_group_name
+}
+# Creates Backup protected Virtual Machine
+resource "azurerm_backup_protected_vm" "backup_protected_vm" {
+  resource_group_name = data.azurerm_recovery_services_vault.services_vault.resource_group_name
+  recovery_vault_name = data.azurerm_recovery_services_vault.services_vault.name
+  source_vm_id        = azurerm_windows_virtual_machine.example.id
+  backup_policy_id    = data.azurerm_backup_policy_vm.policy.id
+  depends_on = [
+    azurerm_windows_virtual_machine.example
+  ]
+}
 
 
 #Creates a Public IP for load balancer
@@ -179,34 +205,21 @@ resource "azurerm_lb_rule" "lb_rule" {
 }
 
 
-# # Extention for startup ELK script
-# resource "azurerm_virtual_machine_extension" "example" {
-#   name                 = "${var.name}-elkscript"
-#   virtual_machine_id   = azurerm_windows_virtual_machine.example.id
-#   publisher            = "Microsoft.Compute"
-#   type                 = "CustomScriptExtension"
-#   type_handler_version = "1.10"
-
-#   settings = <<SETTINGS
-#     {
-#       "fileUris": ["https://sharedsaelk.blob.core.windows.net/elk-startup-script/elkscriptwindows.ps1"],
-#       "commandToExecute": "powershell -ExecutionPolicy Bypass -File elkscriptwindows.ps1" 
-#     }
-# SETTINGS
-# }
+# Extention for startup ELK script
 resource "azurerm_virtual_machine_extension" "example" {
-  name                 = "${var.name}-s1agent"
+  name                 = "${var.name}-elkscript"
   virtual_machine_id   = azurerm_windows_virtual_machine.example.id
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
   type_handler_version = "1.10"
 
-  settings = <<SETTINGS
+  settings   = <<SETTINGS
     {
-      "fileUris": ["https://sharedsaelk.blob.core.windows.net/s1-data/s1-agent.ps1"],
-      "commandToExecute": "powershell -ExecutionPolicy Bypass -File s1-agent.ps1" 
+      "fileUris": ["https://sharedsaelk.blob.core.windows.net/s1-data/s1-agent.ps1?sp=r&st=2026-03-23T09:00:31Z&se=2027…"],
+      "commandToExecute": "powershell -ExecutionPolicy Bypass -File elkscriptwindows.ps1" 
     }
 SETTINGS
+  depends_on = [azurerm_windows_virtual_machine.example]
 }
 
 #Getting existing Keyvault name to store credentials as secrets

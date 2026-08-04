@@ -43,6 +43,31 @@ variable "disk_size_gb" {
 
 }
 
+# source_image_reference
+variable "publisher" {
+  type        = string
+  description = "Specifies the Publisher of the Marketplace Image this Virtual Machine should be created from.View documentation for all options"
+  default     = "MicrosoftWindowsServer"
+}
+
+variable "offer" {
+  type        = string
+  description = " Specifies the offer of the image used to create the virtual machines.View documentation for all options "
+  default     = "WindowsServer"
+}
+
+variable "sku" {
+  type        = string
+  description = "Specifies the SKU of the image used to create the virtual machines.View documentation for all options"
+
+}
+
+variable "storage_image_version" {
+  type        = string
+  description = "Specifies the Operating System version on the OS Disk. View documentation for all options"
+  default     = "latest"
+
+}
 
 
 # azurerm_network_interface
@@ -85,29 +110,37 @@ variable "nsg_rules" {
       name                       = "allow-https"
       priority                   = 100
       protocol                   = "Tcp"
-      source_address_prefixes      = [
-         "173.245.48.0/20",
-         "103.21.244.0/22",
-         "103.22.200.0/22",
-         "103.31.4.0/22",
-         "141.101.64.0/18",
-         "108.162.192.0/18",
-         "190.93.240.0/20",
-         "188.114.96.0/20",
-         "197.234.240.0/22",
-         "198.41.128.0/17",
-         "162.158.0.0/15",
-         "104.16.0.0/13",
-         "104.24.0.0/14",
-         "172.64.0.0/13",
-         "131.0.72.0/22"
-        ]
-      source_port_range          = "*"
+      source_address_prefixes = [
+        "173.245.48.0/20",
+        "103.21.244.0/22",
+        "103.22.200.0/22",
+        "103.31.4.0/22",
+        "141.101.64.0/18",
+        "108.162.192.0/18",
+        "190.93.240.0/20",
+        "188.114.96.0/20",
+        "197.234.240.0/22",
+        "198.41.128.0/17",
+        "162.158.0.0/15",
+        "104.16.0.0/13",
+        "104.24.0.0/14",
+        "172.64.0.0/13",
+        "131.0.72.0/22"
+      ]
+      source_port_range = "*"
     }
   }
 }
 
-
+# azurerm_recovery_services_vault
+variable "recovery_services_vault_name" {
+  type        = string
+  description = "name of the recover service vault"
+}
+variable "services_vault_resource_group_name" {
+  type        = string
+  description = "name of resource group where the recovery service vault reside in"
+}
 
 
 //load_balancer 
@@ -159,13 +192,17 @@ variable "keyvault_name" {
   description = "name of keyvault where VM password will be stored in"
 }
 
-variable "image_id" {
-  type = string
-  
-}
-variable "secure_boot_enabled" {
-  type        = bool
-  default = true
-  
-}
+# variable "public_ip_id" {
+#   type = string
 
+# }
+variable "secure_boot_enabled" {
+  type    = bool
+  default = "true"
+
+}
+variable "vtpm_enabled" {
+  type    = bool
+  default = "true"
+
+}
