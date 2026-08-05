@@ -188,6 +188,10 @@ variable "probe_ports" {
 }
 
 variable "keyvault_name" {
+  # Optional so a caller passing key_vault_id can omit it; "" turns the
+  # plan-time lookup off (see the count on the data source).
+  default = ""
+
   type        = string
   description = "name of keyvault where VM password will be stored in"
 }
