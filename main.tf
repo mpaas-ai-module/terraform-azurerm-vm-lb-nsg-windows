@@ -106,7 +106,7 @@ data "azurerm_recovery_services_vault" "services_vault" {
 }
 # Getting existing Backup Policy for Virtual Machine
 data "azurerm_backup_policy_vm" "policy" {
-  name                = "VM-backup-policy"
+  name                = "EnhancedPolicy"
   recovery_vault_name = data.azurerm_recovery_services_vault.services_vault.name
   resource_group_name = data.azurerm_recovery_services_vault.services_vault.resource_group_name
 }
@@ -205,22 +205,21 @@ resource "azurerm_lb_rule" "lb_rule" {
 }
 
 
-# Extention for startup ELK script
-resource "azurerm_virtual_machine_extension" "example" {
-  name                 = "${var.name}-elkscript"
-  virtual_machine_id   = azurerm_windows_virtual_machine.example.id
-  publisher            = "Microsoft.Compute"
-  type                 = "CustomScriptExtension"
-  type_handler_version = "1.10"
+# # Extention for startup ELK script Commented for time being
+# resource "azurerm_virtual_machine_extension" "example" {
+#   name                 = "${var.name}-s1agent"
+#   virtual_machine_id   = azurerm_windows_virtual_machine.example.id
+#   publisher            = "Microsoft.Compute"
+#   type                 = "CustomScriptExtension"
+#   type_handler_version = "1.10"
 
-  settings   = <<SETTINGS
-    {
-      "fileUris": ["https://sharedsaelk.blob.core.windows.net/s1-data/s1-agent.ps1?sp=r&st=2026-03-23T09:00:31Z&se=2027…"],
-      "commandToExecute": "powershell -ExecutionPolicy Bypass -File elkscriptwindows.ps1" 
-    }
-SETTINGS
-  depends_on = [azurerm_windows_virtual_machine.example]
-}
+#   settings = <<SETTINGS
+#     {
+#       "fileUris": ["https://sharedsaelk.blob.core.windows.net/s1-data/s1-agent.ps1"],
+#       "commandToExecute": "powershell -ExecutionPolicy Bypass -File s1-agent.ps1" 
+#     }
+# SETTINGS
+# }
 
 #Getting existing Keyvault name to store credentials as secrets
 data "azurerm_key_vault" "key_vault" {
@@ -260,4 +259,4 @@ resource "azurerm_key_vault_secret" "vm_password" {
   key_vault_id = local.key_vault_id
 
 }
-  
+
