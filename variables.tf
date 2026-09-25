@@ -65,7 +65,7 @@ variable "sku" {
 variable "storage_image_version" {
   type        = string
   description = "Specifies the Operating System version on the OS Disk. View documentation for all options"
-  default     = "latest"
+  default = "latest"
 
 }
 
@@ -110,24 +110,24 @@ variable "nsg_rules" {
       name                       = "allow-https"
       priority                   = 100
       protocol                   = "Tcp"
-      source_address_prefixes = [
-        "173.245.48.0/20",
-        "103.21.244.0/22",
-        "103.22.200.0/22",
-        "103.31.4.0/22",
-        "141.101.64.0/18",
-        "108.162.192.0/18",
-        "190.93.240.0/20",
-        "188.114.96.0/20",
-        "197.234.240.0/22",
-        "198.41.128.0/17",
-        "162.158.0.0/15",
-        "104.16.0.0/13",
-        "104.24.0.0/14",
-        "172.64.0.0/13",
-        "131.0.72.0/22"
-      ]
-      source_port_range = "*"
+      source_address_prefixes      = [
+         "173.245.48.0/20",
+         "103.21.244.0/22",
+         "103.22.200.0/22",
+         "103.31.4.0/22",
+         "141.101.64.0/18",
+         "108.162.192.0/18",
+         "190.93.240.0/20",
+         "188.114.96.0/20",
+         "197.234.240.0/22",
+         "198.41.128.0/17",
+         "162.158.0.0/15",
+         "104.16.0.0/13",
+         "104.24.0.0/14",
+         "172.64.0.0/13",
+         "131.0.72.0/22"
+        ]
+      source_port_range          = "*"
     }
   }
 }
@@ -188,38 +188,24 @@ variable "probe_ports" {
 }
 
 variable "keyvault_name" {
-  # Optional so a caller passing key_vault_id can omit it; "" turns the
-  # plan-time lookup off (see the count on the data source).
-  default = ""
-
   type        = string
   description = "name of keyvault where VM password will be stored in"
 }
 
 # variable "public_ip_id" {
 #   type = string
-
+  
 # }
 variable "secure_boot_enabled" {
-  type    = bool
+  type = bool
   default = "true"
-
+  
 }
 variable "vtpm_enabled" {
-  type    = bool
+  type = bool
   default = "true"
-
+  
 }
-
-variable "key_vault_id" {
-  type        = string
-  default     = null
-  description = <<-EOT
-    Resource id of an EXISTING key vault to store generated secrets in.
-    Prefer this over keyvault_name: it is a computed attribute, so passing
-    module.resource_group.keyvault_id both orders the apply correctly and
-    skips the by-name data lookup, which fails at plan when the vault is
-    created by the same apply ("Key Vault (...) was not found").
-    Leave null to look the vault up by keyvault_name instead.
-  EOT
+variable "environment" {
+  type = string
 }
